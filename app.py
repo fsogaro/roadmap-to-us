@@ -1,42 +1,41 @@
 # app.py
-from flask import Flask, request, jsonify
-from datetime import date
+from flask import Flask, request, jsonify, render_template
+from datetime import date, datetime
 app = Flask(__name__)
 
-@app.route('/getmsg/', methods=['GET'])
-def respond():
-    # retrieve name from URL parameters
-    name = requests.args
-    print(f" got name {name}")
-    response = {
-        "name": f"Welcome {name}"
-    }
-
-    return jsonify(response)
-
-@app.route('/post/', methods=['POST'])
-def posting_something():
-    param = requests.form.get('name')
-    print(param)
-
-    if param:
-        return jsonify({
-            "Message": f"Welcome {name}",
-            "METHOD": 'POST'
-        })
 
 @app.route('/')
 def index():
     today = date.today()
-    next_visit = date(2021, 5, 22)
-    diff = next_visit - today
-    print(diff)
-    print(diff.days)
-    return f"<h1> Only {diff.days} to go! </h1>"
+
+    print("reading")
+    with open('travels.csv') as f:
+        lis = [line.split() for line in f]
+        for i, next_travel in enumerate(lis[1:]):
+            arrival_date = datetime.strptime(next_travel[0],
+                                             '%d-%m-%y').date()
+            diff = arrival_date - today
+            if diff.days > 0:
+                break
+
+    if diff.days > 0:
+        text = f"{diff.days} days to go!"
+        city = str(next_travel[2])
+        arrival_time = str(next_travel[1])
+
+    else:
+        text = "No travels planned :( "
+        city = 'last visit was on:'
+        arrival_time = ''
+
+
+
+
+    return render_template("index.html",
+                           text=text,
+                           city=city,
+                           date=arrival_date,
+                           arrival_time=arrival_time)
 
 if __name__ == '__main__':
     app.run(threaded=True, port=5000)
-
-
-
-
